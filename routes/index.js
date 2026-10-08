@@ -53,7 +53,10 @@ router.put('/reservations/:id', reservation.updateReservation);
 
 // Supprimer une réservation (avec vérification de l'heure)
 //router.delete('/reservations/:id', authMiddleware, reservation_actions.deleteReservation);
-router.delete('/reservations/:id', reservation.deleteReservation);
+router.delete('/reservations/:id', authMiddleware, reservation.deleteReservation);
+
+// Supprimer une réservation en tant qu'administrateur (sans restriction de temps)
+router.delete('/admin/reservations/:id', adminMiddleware, reservation.deleteReservation);
 
 // routes/reservation.js ou équivalent
 router.get('/reservation/:id', authMiddleware, reservation.getReservationById);

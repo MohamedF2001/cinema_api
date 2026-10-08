@@ -67,3 +67,6 @@ app.listen(3000, () => {
 // ✅ Exporter la fonction handler pour Vercel
 //module.exports = serverless(app);
 
+// Exporter l'app pour les tests
+module.exports = app;
+

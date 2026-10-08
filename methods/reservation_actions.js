@@ -120,16 +120,18 @@ var functions = {
                 });
             }
 
-            // Vérifier le délai avant la séance
-            const seanceHoraire = new Date(reservation.seanceId.horaire);
-            const now = new Date();
-            const diffInHours = (seanceHoraire - now) / (1000 * 60 * 60);
+            // Vérifier le délai avant la séance (si la séance existe)
+            if (reservation.seanceId && reservation.seanceId.horaire) {
+                const seanceHoraire = new Date(reservation.seanceId.horaire);
+                const now = new Date();
+                const diffInHours = (seanceHoraire - now) / (1000 * 60 * 60);
 
-            if (diffInHours < 1) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Modification impossible moins d\'une heure avant la séance'
-                });
+                if (diffInHours < 1) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Modification impossible moins d\'une heure avant la séance'
+                    });
+                }
             }
 
             // Si changement de siège, vérifier disponibilité
@@ -177,15 +179,23 @@ var functions = {
                 });
             }
 
-            const seanceHoraire = new Date(reservation.seanceId.horaire);
-            const now = new Date();
-            const diffInHours = (seanceHoraire - now) / (1000 * 60 * 60);
+            // Vérifier si l'utilisateur est authentifié (via req.user ou req.admin)
+            const isUser = req.user !== undefined;
+            const isAdmin = req.admin !== undefined;
 
-            if (diffInHours < 1) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Suppression impossible moins d\'une heure avant la séance'
-                });
+            // Vérifier le délai avant la séance (si la séance existe)
+            // Un administrateur peut supprimer n'importe quand
+            if (!isAdmin && reservation.seanceId && reservation.seanceId.horaire) {
+                const seanceHoraire = new Date(reservation.seanceId.horaire);
+                const now = new Date();
+                const diffInHours = (seanceHoraire - now) / (1000 * 60 * 60);
+
+                if (diffInHours < 1) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Suppression impossible moins d\'une heure avant la séance'
+                    });
+                }
             }
 
             await Reservation.findByIdAndDelete(reservationId);
