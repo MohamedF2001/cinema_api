@@ -1,4 +1,5 @@
 var Seance = require('../models/seance')
+var Reservation = require('../models/reservation')
 var jwt = require('jwt-simple')
 var config = require('../config/dbconfig')
 var j_decoo = require('jwt-decode')
@@ -212,27 +213,31 @@ var functions = {
     },
 
     // Supprimer une séance
-    deleteSeance: function (req, res) {
-        Seance.findByIdAndDelete(req.params.id)
-            .then((seance) => {
-                if (!seance) {
-                    return res.json({
-                        success: false,
-                        msg: 'Séance non trouvée'
-                    });
-                }
-                res.json({
-                    success: true,
-                    msg: 'Séance supprimée avec succès'
-                });
-            })
-            .catch((err) => {
-                res.json({
+    deleteSeance: async function (req, res) {
+        try {
+            const seance = await Seance.findById(req.params.id);
+
+            if (!seance) {
+                return res.status(404).json({
                     success: false,
-                    msg: 'Suppression de la séance échouée',
-                    error: err.message
+                    msg: 'Séance non trouvée'
                 });
+            }
+
+            await Reservation.deleteMany({ seanceId: seance._id });
+            await Seance.findByIdAndDelete(seance._id);
+
+            return res.json({
+                success: true,
+                msg: 'Séance et réservations associées supprimées avec succès'
             });
+        } catch (err) {
+            return res.status(500).json({
+                success: false,
+                msg: 'Suppression de la séance échouée',
+                error: err.message
+            });
+        }
     }
 }
 

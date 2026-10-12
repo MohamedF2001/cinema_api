@@ -1,0 +1,264 @@
+openapi: 3.0.3
+info:
+  title: Cinema API
+  version: 1.0.0
+  description: API de gestion des utilisateurs, séances et réservations de cinéma.
+servers:
+  - url: http://localhost:3000
+    description: Serveur local
+tags:
+  - name: Authentification
+  - name: Utilisateurs
+  - name: Séances
+  - name: Réservations
+  - name: Administrateurs
+paths:
+  /:
+    get:
+      summary: Vérifier que l'API répond
+      responses:
+        '200':
+          description: API disponible
+  /register:
+    post:
+      tags: [Authentification]
+      summary: Créer un compte utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nom, prenom, numero, password]
+              properties:
+                nom: { type: string }
+                prenom: { type: string }
+                numero: { type: string }
+                password: { type: string, format: password }
+      responses:
+        '200': { description: Compte créé et jeton retourné }
+        '400': { description: Champs manquants ou utilisateur déjà inscrit }
+  /login:
+    post:
+      tags: [Authentification]
+      summary: Se connecter avec le numéro et le mot de passe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [numero, password]
+              properties:
+                numero: { type: string }
+                password: { type: string, format: password }
+      responses:
+        '200': { description: Connexion réussie, jeton et profil retournés }
+        '400': { description: Numéro ou mot de passe manquant }
+        '401': { description: Mot de passe incorrect }
+        '404': { description: Utilisateur introuvable }
+  /reset-password:
+    post:
+      tags: [Authentification]
+      summary: Changer le mot de passe après vérification du numéro associé au compte
+      description: Le numéro doit correspondre à un compte existant. Cette vérification seule ne prouve pas la possession du numéro.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [numero, newPassword]
+              properties:
+                numero: { type: string }
+                newPassword: { type: string, format: password }
+      responses:
+        '200': { description: Mot de passe réinitialisé }
+        '400': { description: Numéro ou nouveau mot de passe manquant }
+        '404': { description: Utilisateur introuvable pour ce numéro }
+  /me:
+    get:
+      tags: [Utilisateurs]
+      summary: Obtenir le profil connecté
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Profil utilisateur }
+        '401': { description: Authentification requise }
+  /logout:
+    get:
+      tags: [Authentification]
+      summary: Déconnecter l'utilisateur
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Déconnexion réussie }
+        '401': { description: Authentification requise }
+  /profile:
+    get:
+      tags: [Utilisateurs]
+      summary: Obtenir un message de bienvenue
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Message de bienvenue }
+  /seances:
+    get:
+      tags: [Séances]
+      summary: Lister les séances
+      responses:
+        '200': { description: Liste des séances }
+    post:
+      tags: [Séances]
+      summary: Créer une séance
+      responses:
+        '200': { description: Séance créée ou erreur métier }
+  /seances/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Séances]
+      summary: Obtenir une séance
+      responses:
+        '200': { description: Séance trouvée }
+        '404': { description: Séance introuvable }
+    put:
+      tags: [Séances]
+      summary: Modifier une séance
+      responses:
+        '200': { description: Résultat de la modification }
+    delete:
+      tags: [Séances]
+      summary: Supprimer une séance et ses réservations associées
+      responses:
+        '200': { description: Séance et réservations supprimées }
+        '404': { description: Séance introuvable }
+  /seances/{id}/places:
+    patch:
+      tags: [Séances]
+      summary: Mettre à jour les places disponibles
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: Places mises à jour }
+  /seances/film/{filmId}:
+    get:
+      tags: [Séances]
+      summary: Lister les séances d'un film
+      parameters:
+        - name: filmId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Liste des séances du film }
+  /seances/date/{date}:
+    get:
+      tags: [Séances]
+      summary: Lister les séances d'une date
+      parameters:
+        - name: date
+          in: path
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200': { description: Liste des séances à cette date }
+  /reservations:
+    get:
+      tags: [Réservations]
+      summary: Lister les réservations
+      responses:
+        '200': { description: Liste des réservations }
+    post:
+      tags: [Réservations]
+      summary: Créer une réservation
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: Réservation créée }
+        '401': { description: Authentification requise }
+  /reservations/seance/{seanceId}:
+    get:
+      tags: [Réservations]
+      summary: Obtenir les sièges réservés d'une séance
+      parameters:
+        - name: seanceId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Liste des sièges réservés }
+  /reservations/user/{userId}:
+    get:
+      tags: [Réservations]
+      summary: Lister les réservations d'un utilisateur
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Réservations de l'utilisateur }
+  /reservations/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    put:
+      tags: [Réservations]
+      summary: Modifier une réservation
+      responses:
+        '200': { description: Réservation modifiée }
+    delete:
+      tags: [Réservations]
+      summary: Supprimer une réservation
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Réservation supprimée }
+        '400': { description: Suppression impossible à moins d'une heure de la séance }
+  /reservation/{id}:
+    get:
+      tags: [Réservations]
+      summary: Obtenir une réservation
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: Réservation trouvée }
+        '404': { description: Réservation introuvable }
+  /admin/reservations/{id}:
+    delete:
+      tags: [Administrateurs]
+      summary: Supprimer une réservation sans restriction horaire
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200': { description: Réservation supprimée }
+  /adminlogin:
+    post:
+      tags: [Administrateurs]
+      summary: Connecter un administrateur
+      responses:
+        '200': { description: Jeton administrateur retourné }
+  /adminregister:
+    post:
+      tags: [Administrateurs]
+      summary: Créer un administrateur
+      responses:
+        '200': { description: Administrateur créé }
+  /admin:
+    get:
+      tags: [Administrateurs]
+      summary: Vérifier l'accès administrateur
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Accès administrateur validé }
+        '401': { description: Authentification requise }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }

@@ -53,13 +53,13 @@ var functions = {
     },
 
     login: async (req, res) => {
-        const { nom, prenom, numero, password } = req.body;
-        if (!nom || !prenom || !numero || !password) {
-            return res.status(400).json({ success: false, msg: 'Tous les champs sont requis' });
+        const { numero, password } = req.body;
+        if (!numero || !password) {
+            return res.status(400).json({ success: false, msg: 'Le numéro et le mot de passe sont requis' });
         }
 
         try {
-            const user = await User.findOne({ nom, prenom, numero });
+            const user = await User.findOne({ numero });
             if (!user) return res.status(404).json({ success: false, msg: 'Utilisateur non trouvé' });
 
             const match = await user.comparePassword(password);
@@ -79,13 +79,13 @@ var functions = {
     },
 
     resetPassword: async (req, res) => {
-        const { nom, prenom, numero, newPassword } = req.body;
-        if (!nom || !prenom || !numero || !newPassword) {
-            return res.status(400).json({ success: false, msg: 'Tous les champs sont requis' });
+        const { numero, newPassword } = req.body;
+        if (!numero || !newPassword) {
+            return res.status(400).json({ success: false, msg: 'Le numéro et le nouveau mot de passe sont requis' });
         }
 
         try {
-            const user = await User.findOne({ nom, prenom, numero });
+            const user = await User.findOne({ numero });
             if (!user) return res.status(404).json({ success: false, msg: 'Utilisateur non trouvé' });
 
             user.password = newPassword;
