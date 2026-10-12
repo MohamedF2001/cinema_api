@@ -31,6 +31,9 @@ npm start
 
 Le serveur démarre sur le port 3000.
 
+La documentation interactive Swagger est disponible sur `http://localhost:3000/api-docs`.
+La spécification OpenAPI au format JSON est disponible sur `http://localhost:3000/swagger.json`.
+
 ## Tests
 
 Pour exécuter les tests, vous devez d'abord installer les dépendances de développement :

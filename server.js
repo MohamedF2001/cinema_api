@@ -36,6 +36,8 @@ const connectDB = require('./config/db');
 const routes = require('./routes/index');
 const bodyParser = require('body-parser');
 const serverless = require("serverless-http"); // Import nécessaire pour Vercel
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
 
 const app = express();
 const Admin = require('./models/admin');
@@ -57,6 +59,8 @@ connectDB();
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.get('/swagger.json', (req, res) => res.json(swaggerDocument));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(routes);
 
 // ⛔ Supprimer ceci
@@ -69,4 +73,3 @@ app.listen(3000, () => {
 
 // Exporter l'app pour les tests
 module.exports = app;
-
